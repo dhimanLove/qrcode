@@ -16,6 +16,8 @@ dependencies:
   qr_flutter:
   cupertino_icons:
   mobile_scanner:
+  zxing2:
+  image_picker:
 
 dev_dependencies:
   flutter_test:

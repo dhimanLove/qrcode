@@ -115,7 +115,7 @@ class Homepage extends StatelessWidget {
                               vertical: 15,
                             ),
                             child: ElevatedButton(
-                              onPressed: () => Get.to(() => const Scanqr()),
+                              onPressed: () => Get.to(() => const ScanQR()),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.indigo[600],
                                 padding: const EdgeInsets.all(20),
