@@ -12,19 +12,50 @@ class ScanQR extends StatefulWidget {
 class _ScanQRState extends State<ScanQR> {
   String qrData = 'Scanned Data will appear here';
   bool isScanning = true;
-  final MobileScannerController controller = MobileScannerController();
+  bool isProcessing = false;
+  final MobileScannerController controller = MobileScannerController(
+    formats: [BarcodeFormat.qrCode], // Restrict to QR codes only
+    autoStart: true,
+    detectionSpeed: DetectionSpeed.normal, // Prioritize accuracy
+    returnImage: true, // Useful for debugging
+  );
 
   Future<void> pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final result = await controller.analyzeImage(image.path);
-      setState(() {
-        qrData = result?.toString() ?? 'No QR Code detected!';
-        isScanning = false;
-      });
+    setState(() {
+      isProcessing = true;
+    });
 
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image != null && mounted) {
+        final result = await controller.analyzeImage(image.path);
+        setState(() {
+          qrData = result?.barcodes.first.displayValue ?? 'No QR Code detected!';
+          isScanning = false;
+          isProcessing = false;
+        });
+      } else {
+        setState(() {
+          qrData = 'No image selected!';
+          isScanning = false;
+          isProcessing = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        qrData = 'Error processing image: $e';
+        isScanning = false;
+        isProcessing = false;
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -36,17 +67,25 @@ class _ScanQRState extends State<ScanQR> {
         children: [
           MobileScanner(
             controller: controller,
+            errorBuilder: (context, exception, child) {
+              return Center(
+                child: Text(
+                  'Scanner error: ${exception.errorCode}',
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                ),
+              );
+            },
             onDetect: (capture) {
               final List<Barcode> barcodes = capture.barcodes;
-              if (barcodes.isNotEmpty) {
+              if (barcodes.isNotEmpty && mounted) {
                 setState(() {
-                  qrData = barcodes.first.rawValue ?? 'No data found!';
+                  qrData = barcodes.first.displayValue ?? 'No data found!';
                   isScanning = false;
                 });
+                controller.stop(); // Stop scanning after detection
               }
             },
           ),
-
           Positioned.fill(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -67,20 +106,22 @@ class _ScanQRState extends State<ScanQR> {
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: const Text(
-                    'Align QR Code Here',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: isProcessing
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                      : const Text(
+                          'Align QR Code Here',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
-
                 const SizedBox(height: 30),
-
                 ElevatedButton.icon(
-                  onPressed: pickImage,
+                  onPressed: isProcessing ? null : pickImage,
                   icon: const Icon(Icons.image, color: Colors.black),
                   label: const Text(
                     'Scan from Gallery',
@@ -98,7 +139,6 @@ class _ScanQRState extends State<ScanQR> {
               ],
             ),
           ),
-
           if (!isScanning)
             Positioned(
               bottom: 20,
@@ -141,8 +181,9 @@ class _ScanQRState extends State<ScanQR> {
           setState(() {
             isScanning = true;
             qrData = 'Scanned Data will appear here';
-            controller.start();
+            isProcessing = false;
           });
+          controller.start();
         },
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,

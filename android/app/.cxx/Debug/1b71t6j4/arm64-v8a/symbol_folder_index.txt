@@ -1,0 +1,1 @@
+C:\Users\ASUS\AndroidStudioProjects\qrcode\build\app\intermediates\cxx\Debug\1b71t6j4\obj\arm64-v8a

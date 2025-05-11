@@ -7,17 +7,20 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.6.1
-
 dependencies:
   flutter:
     sdk: flutter
-  get:
-  qr_flutter:
-  cupertino_icons:
-  mobile_scanner:
-  zxing2:
-  image_picker:
-  flutter_launcher_icons:
+  get: ^4.6.6
+  qr_flutter: ^4.1.0
+  gallery_saver:
+  cupertino_icons: ^1.0.8
+  mobile_scanner: ^5.2.1
+  permission_handler: ^11.0.0
+  shared_preferences: ^2.3.0
+  share_plus: ^10.0.2
+  image_picker: ^1.1.2
+  path_provider: ^2.1.4
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
